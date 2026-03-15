@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: steam-recommend-api
+    ports:
+      - "8000:8000"
+    environment:
+      # 로컬 DB 연결 변수 (docker-compose 실행 환경 기준)
+      # docker-compose로 띄우는 API가 호스트 PC의 로컬 DB에 접속할 때는 'host.docker.internal' 사용
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-steam_games_clone}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+    restart: unless-stopped
+    volumes:
+      # 개발 편의를 위한 소스코드 마운트 (핫 리로드 작동)
+      - ./src:/app/src
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload

@@ -29,4 +29,4 @@ networks:
   default:
   shared_db_network:
     external: true
-    name: ${DB_NETWORK_NAME:-steam-spider_default}
+    name: ${DB_NETWORK_NAME:-steam-spider_steam-network}

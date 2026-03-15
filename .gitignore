@@ -1,0 +1,6 @@
+.env*
+etc/
+# pem
+pem/
+# venv
+.venv/

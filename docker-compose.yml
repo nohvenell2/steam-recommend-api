@@ -14,8 +14,19 @@ services:
       - DB_NAME=${DB_NAME:-steam_games_clone}
       - DB_USER=${DB_USER:-postgres}
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     volumes:
       # 개발 편의를 위한 소스코드 마운트 (핫 리로드 작동)
       - ./src:/app/src
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - default
+      - shared_db_network
+
+networks:
+  default:
+  shared_db_network:
+    external: true
+    name: ${DB_NETWORK_NAME:-steam-spider_default}

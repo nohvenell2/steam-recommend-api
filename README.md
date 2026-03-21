@@ -98,6 +98,44 @@ uvicorn src.main:app --reload --port 8000
     }
   ```
 
+### 3. 게임 정보 일괄 조회
+- **경로**: `POST /games/info`
+- **설명**: 여러 게임 ID를 한 번에 입력하면, 해당 게임들의 상세 정보(메타데이터, 리뷰, 장르, 태그)를 일괄 조회하여 반환합니다. DB에 존재하지 않는 게임 ID는 `not_found_game_ids`에 포함됩니다.
+- **Request Body 예시**:
+  ```json
+    {
+        "game_ids": [1091500, 1404210, 999999999]
+    }
+  ```
+- **Response 예시**:
+  ```json
+    {
+        "status": "success",
+        "data": [
+            {
+                "game_id": 1091500,
+                "url": "https://store.steampowered.com/app/1091500",
+                "title": "Cyberpunk 2077",
+                "description": "...",
+                "header_image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg",
+                "developer": "CD PROJEKT RED",
+                "publisher": "CD PROJEKT RED",
+                "release_date": "2020-12-10T00:00:00",
+                "release_date_original": "Dec 10, 2020",
+                "total_review_count": 500000,
+                "all_reviews": "Very Positive",
+                "total_review_positive_percent": 85,
+                "recent_review_count": 3000,
+                "recent_reviews": "Very Positive",
+                "recent_review_positive_percent": 93,
+                "genres": ["RPG"],
+                "tags": ["Open World", "RPG", "Cyberpunk"]
+            }
+        ],
+        "not_found_game_ids": [999999999]
+    }
+  ```
+
 ---
 
 ## 응답 (Response) 형식

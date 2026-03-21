@@ -3,6 +3,38 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from src.models import GameRecommendRequest, UserRecommendRequest
 
+
+def _parse_pg_array(val):
+    if val is None:
+        return []
+    if isinstance(val, list):
+        return val
+    return [x for x in val.strip('{}').split(',') if x]
+
+
+def _row_to_recommendation(row) -> dict:
+    return {
+        "game_id": row.game_id,
+        "title": row.title,
+        "url": row.url,
+        "description": row.description,
+        "header_image": row.header_image,
+        "developer": row.developer,
+        "publisher": row.publisher,
+        "release_date": row.release_date,
+        "release_date_original": row.release_date_original,
+        "sim_score": row.sim_score,
+        "total_review_count": row.total_review_count,
+        "all_reviews": row.all_reviews,
+        "total_review_positive_percent": row.total_review_positive_percent,
+        "recent_review_count": row.recent_review_count,
+        "recent_reviews": row.recent_reviews,
+        "recent_review_positive_percent": row.recent_review_positive_percent,
+        "genres": _parse_pg_array(row.genres),
+        "tags": _parse_pg_array(row.tags),
+    }
+
+
 def get_item_recommendations(db: Session, request: GameRecommendRequest, limit: int = 20):
     """
     특정 게임 기준 유사도 검색
@@ -19,15 +51,33 @@ def get_item_recommendations(db: Session, request: GameRecommendRequest, limit: 
         SELECT
             b.game_id,
             b.title,
+            b.url,
+            b.description,
+            b.header_image,
+            b.developer,
+            b.publisher,
+            b.release_date,
+            b.release_date_original,
             (1 - (e.embedding <=> (SELECT embedding FROM target))) AS sim_score,
             r.total_review_count,
+            r.all_reviews,
             r.total_review_positive_percent,
             r.recent_review_count,
+            r.recent_reviews,
             r.recent_review_positive_percent,
-            b.release_date
+            COALESCE(g.genre_list, ARRAY[]::text[]) AS genres,
+            COALESCE(t.tag_list, ARRAY[]::text[]) AS tags
         FROM game_embeddings e
         JOIN basic_info b ON e.game_id = b.game_id
         JOIN reviews r ON e.game_id = r.game_id
+        LEFT JOIN (
+            SELECT game_id, array_agg(genre_name) AS genre_list
+            FROM genres GROUP BY game_id
+        ) g ON b.game_id = g.game_id
+        LEFT JOIN (
+            SELECT game_id, array_agg(tag_name) AS tag_list
+            FROM tags GROUP BY game_id
+        ) t ON b.game_id = t.game_id
         WHERE e.game_id != :g_id
           AND b.release_date >= :release_date
           AND COALESCE(r.total_review_count, 0) >= :total_review_count
@@ -48,19 +98,7 @@ def get_item_recommendations(db: Session, request: GameRecommendRequest, limit: 
         "limit": limit
     }).fetchall()
     
-    return [
-        {
-            "game_id": row.game_id,
-            "title": row.title,
-            "sim_score": row.sim_score,
-            "total_review_count": row.total_review_count,
-            "total_review_positive_percent": row.total_review_positive_percent,
-            "recent_review_count": row.recent_review_count,
-            "recent_review_positive_percent": row.recent_review_positive_percent,
-            "release_date": row.release_date
-        }
-        for row in results
-    ]
+    return [_row_to_recommendation(row) for row in results]
 
 def get_user_recommendations(db: Session, request: UserRecommendRequest, limit: int = 20):
     """
@@ -133,15 +171,33 @@ def get_user_recommendations(db: Session, request: UserRecommendRequest, limit: 
         SELECT
             b.game_id,
             b.title,
+            b.url,
+            b.description,
+            b.header_image,
+            b.developer,
+            b.publisher,
+            b.release_date,
+            b.release_date_original,
             (1 - (e.embedding <=> :user_vector)) AS sim_score,
             r.total_review_count,
+            r.all_reviews,
             r.total_review_positive_percent,
             r.recent_review_count,
+            r.recent_reviews,
             r.recent_review_positive_percent,
-            b.release_date
+            COALESCE(g.genre_list, ARRAY[]::text[]) AS genres,
+            COALESCE(t.tag_list, ARRAY[]::text[]) AS tags
         FROM game_embeddings e
         JOIN basic_info b ON e.game_id = b.game_id
         JOIN reviews r ON e.game_id = r.game_id
+        LEFT JOIN (
+            SELECT game_id, array_agg(genre_name) AS genre_list
+            FROM genres GROUP BY game_id
+        ) g ON b.game_id = g.game_id
+        LEFT JOIN (
+            SELECT game_id, array_agg(tag_name) AS tag_list
+            FROM tags GROUP BY game_id
+        ) t ON b.game_id = t.game_id
         WHERE e.game_id NOT IN :app_ids
           AND b.release_date >= :release_date
           AND COALESCE(r.total_review_count, 0) >= :total_review_count
@@ -167,18 +223,6 @@ def get_user_recommendations(db: Session, request: UserRecommendRequest, limit: 
     skipped_ids = [gid for gid in app_ids if gid not in embedded_ids]
 
     return {
-        "recommendations": [
-            {
-                "game_id": row.game_id,
-                "title": row.title,
-                "sim_score": row.sim_score,
-                "total_review_count": row.total_review_count,
-                "total_review_positive_percent": row.total_review_positive_percent,
-                "recent_review_count": row.recent_review_count,
-                "recent_review_positive_percent": row.recent_review_positive_percent,
-                "release_date": row.release_date
-            }
-            for row in results
-        ],
+        "recommendations": [_row_to_recommendation(row) for row in results],
         "skipped_game_ids": skipped_ids
     }

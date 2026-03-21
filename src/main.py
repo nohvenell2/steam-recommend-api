@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from src.database import get_db, init_db, close_db
-from src.models import GameRecommendRequest, UserRecommendRequest
+from src.models import GameRecommendRequest, UserRecommendRequest, GameRecommendResponse, UserRecommendResponse
 from src.services import get_item_recommendations, get_user_recommendations
 
 @asynccontextmanager
@@ -31,7 +31,7 @@ app.add_middleware(
 )
 
 
-@app.post("/recommend/game")
+@app.post("/recommend/game", response_model=GameRecommendResponse)
 def recommend_by_game(request: GameRecommendRequest, db: Session = Depends(get_db)):
     try:
         results = get_item_recommendations(db=db, request=request, limit=request.limit)
@@ -45,7 +45,7 @@ def recommend_by_game(request: GameRecommendRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/recommend/user")
+@app.post("/recommend/user", response_model=UserRecommendResponse)
 def recommend_by_user(request: UserRecommendRequest, db: Session = Depends(get_db)):
     try:
         result = get_user_recommendations(db=db, request=request, limit=request.limit)

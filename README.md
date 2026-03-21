@@ -56,10 +56,15 @@ uvicorn src.main:app --reload --port 8000
 - **설명**: 특정 게임의 ID(`game_id`)를 기준으로, 함께 맵핑된 벡터를 가장 유사한 순으로 검색하여 반환합니다. (지정된 대상 게임 자신은 결과에서 제외됩니다.)
 - **Request Body 예시**:
   ```json
-  {
-      "game_id": 292030,
-      "limit": 10
-  }
+    {
+        "limit": 20,
+        "release_date": "2020-01-01T00:00:00",
+        "total_review_count": 100,
+        "total_review_positive_percent": 50,
+        "recent_review_count": 0,
+        "recent_review_positive_percent": 0,
+        "game_id": 1091500
+    }
   ```
 
 ### 2. User-to-Item 유저 기반 추천 검색
@@ -67,22 +72,30 @@ uvicorn src.main:app --reload --port 8000
 - **설명**: 한 유저가 플레이한 게임 리스트와それぞれの `playtime_forever` (플레이 타임)을 기준으로 **유저 취향 벡터**를 계산한 뒤, 이 벡터와 유사한 게임을 스팀 전체 목록에서 검색하여 반환합니다. (유저가 현재 보유해 보낸 배열에 있는 게임들은 모두 결과에서 자동 제외됩니다.)
 - **Request Body 예시**:
   ```json
-  {
-      "games": [
-          {
-              "appid": 1174180,
-              "name": "Red Dead Redemption 2",
-              "playtime_forever": 9316
-          },
-          {
-              "appid": 292030,
-              "name": "The Witcher 3: Wild Hunt",
-              "playtime_forever": 5000
-          }
-      ],
-      "limit": 5,
-      "total_review_count": 500
-  }
+    {
+        "limit": 20,
+        "release_date": "2000-01-01T00:00:00",
+        "total_review_count": 100,
+        "total_review_positive_percent": 50,
+        "recent_review_count": 0,
+        "recent_review_positive_percent": 0,
+        "games": [
+            {
+            "appid": 1158310,
+            "name": "",
+            "playtime_forever": 10,
+            "img_icon_url": "",
+            "has_community_visible_stats": false
+            },
+            {
+            "appid": 245,
+            "name": "",
+            "playtime_forever": 10,
+            "img_icon_url": "",
+            "has_community_visible_stats": false
+            }
+        ]
+    }
   ```
 
 ---
@@ -103,6 +116,10 @@ uvicorn src.main:app --reload --port 8000
             "recent_review_positive_percent": null,
             "release_date": "2020-12-01T00:00:00"
         }
-    ]
+    ],
+    "skipped_game_ids": [ 245 ]
 }
 ```
+### 임베딩 데이터가 없는 경우
+1. Item-to-Item : 404 reponse error
+2. User-to-Item : `skipped_game_ids` 항목에 임베딩 데이터가 없는 게임 id 가 추가되어 응답됨

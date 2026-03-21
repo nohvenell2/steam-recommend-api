@@ -9,3 +9,5 @@ pem/
 test_*
 # python
 __pycache__/
+# claude
+.claude/

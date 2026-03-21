@@ -35,7 +35,11 @@ app.add_middleware(
 def recommend_by_game(request: GameRecommendRequest, db: Session = Depends(get_db)):
     try:
         results = get_item_recommendations(db=db, request=request, limit=request.limit)
+        if results is None:
+            raise HTTPException(status_code=404, detail=f"game_id {request.game_id}의 임베딩이 존재하지 않습니다")
         return {"status": "success", "data": results}
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error fetching game recommendations: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -44,8 +48,12 @@ def recommend_by_game(request: GameRecommendRequest, db: Session = Depends(get_d
 @app.post("/recommend/user")
 def recommend_by_user(request: UserRecommendRequest, db: Session = Depends(get_db)):
     try:
-        results = get_user_recommendations(db=db, request=request, limit=request.limit)
-        return {"status": "success", "data": results}
+        result = get_user_recommendations(db=db, request=request, limit=request.limit)
+        return {
+            "status": "success",
+            "data": result["recommendations"],
+            "skipped_game_ids": result["skipped_game_ids"]
+        }
     except Exception as e:
         print(f"Error fetching user recommendations: {e}")
         raise HTTPException(status_code=500, detail=str(e))

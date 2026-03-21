@@ -7,7 +7,11 @@ def get_item_recommendations(db: Session, request: GameRecommendRequest, limit: 
     """
     특정 게임 기준 유사도 검색
     """
-    
+
+    check_query = text("SELECT 1 FROM game_embeddings WHERE game_id = :g_id")
+    if not db.execute(check_query, {"g_id": request.game_id}).fetchone():
+        return None
+
     query = text("""
         WITH target AS (
             SELECT embedding FROM game_embeddings WHERE game_id = :g_id
@@ -69,7 +73,7 @@ def get_user_recommendations(db: Session, request: UserRecommendRequest, limit: 
     
     # 예외 처리: 데이터가 비어있는 경우
     if not app_ids:
-        return []
+        return {"recommendations": [], "skipped_game_ids": []}
 
     # 보유 게임들의 임베딩 가져오기
     # app_ids 튜플 변환
@@ -87,11 +91,8 @@ def get_user_recommendations(db: Session, request: UserRecommendRequest, limit: 
     vectors_results = db.execute(get_vectors_query, {"app_ids": games_tuple}).fetchall()
     
     if not vectors_results:
-         return []
-    
-    # appid 단위 접근을 위해 딕셔너리로 맵핑
-    # ast.literal_eval 등으로 배열을 파싱합니다 (pgvector text format is usually '[v1,v2,...]')
-    
+        return {"recommendations": [], "skipped_game_ids": app_ids}
+
     vector_map = {}
     import json
     for row in vectors_results:
@@ -104,7 +105,7 @@ def get_user_recommendations(db: Session, request: UserRecommendRequest, limit: 
                 pass
 
     if not vector_map:
-        return []
+        return {"recommendations": [], "skipped_game_ids": app_ids}
     
     # 벡터 차원수 파악 (보통 446 또는 가변 모델)
     sample_vec_size = len(list(vector_map.values())[0])
@@ -161,17 +162,23 @@ def get_user_recommendations(db: Session, request: UserRecommendRequest, limit: 
         "recent_review_positive_percent": request.recent_review_positive_percent,
         "limit": limit
     }).fetchall()
-    
-    return [
-        {
-            "game_id": row.game_id,
-            "title": row.title,
-            "sim_score": row.sim_score,
-            "total_review_count": row.total_review_count,
-            "total_review_positive_percent": row.total_review_positive_percent,
-            "recent_review_count": row.recent_review_count,
-            "recent_review_positive_percent": row.recent_review_positive_percent,
-            "release_date": row.release_date
-        }
-        for row in results
-    ]
+
+    embedded_ids = set(vector_map.keys())
+    skipped_ids = [gid for gid in app_ids if gid not in embedded_ids]
+
+    return {
+        "recommendations": [
+            {
+                "game_id": row.game_id,
+                "title": row.title,
+                "sim_score": row.sim_score,
+                "total_review_count": row.total_review_count,
+                "total_review_positive_percent": row.total_review_positive_percent,
+                "recent_review_count": row.recent_review_count,
+                "recent_review_positive_percent": row.recent_review_positive_percent,
+                "release_date": row.release_date
+            }
+            for row in results
+        ],
+        "skipped_game_ids": skipped_ids
+    }

@@ -32,8 +32,8 @@ class BaseFilterParams(BaseModel):
         description="검색 결과 최대 반환 개수 (기본값: 20)"
     )
     release_date: datetime = Field(
-        default="2020-01-01T00:00:00", 
-        description="이 날짜 이후에 출시된 게임만 검색 (기본값: 2020년 1월 1일)"
+        default="2000-01-01T00:00:00", 
+        description="이 날짜 이후에 출시된 게임만 검색 (기본값: 2000년 1월 1일)"
     )
     total_review_count: int = Field(
         default=100, 
@@ -69,3 +69,7 @@ class UserGameInfo(BaseModel):
 class UserRecommendRequest(BaseFilterParams):
     """유저 정보 기반 유사도 검색 요청 (User-to-Item)"""
     games: List[UserGameInfo] = Field(..., description="유저가 플레이한 게임 목록")
+
+class GameInfoRequest(BaseModel):
+    """여러 게임 ID로 게임 정보 조회 요청"""
+    game_ids: List[int] = Field(..., description="조회할 스팀 게임 ID 목록")

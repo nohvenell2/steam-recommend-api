@@ -4,7 +4,7 @@ from collections import defaultdict
 import numpy as np
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from src.models import GameRecommendRequest, UserRecommendRequest
+from src.models import GameRecommendRequest, UserRecommendRequest, GameInfoRequest
 
 
 def _fetch_game_details(db: Session, game_ids_with_scores: list[tuple[int, float]]) -> list[dict]:
@@ -70,6 +70,66 @@ def _fetch_game_details(db: Session, game_ids_with_scores: list[tuple[int, float
 
     results.sort(key=lambda x: x["sim_score"], reverse=True)
     return results
+
+
+def get_game_details_by_ids(db: Session, game_ids: list[int]) -> dict:
+    """
+    여러 game_id를 받아 게임 전체 정보를 조회하여 반환.
+    """
+    if not game_ids:
+        return {"games": [], "not_found_game_ids": []}
+
+    ids_tuple = tuple(game_ids)
+
+    info_query = text("""
+        SELECT b.game_id, b.url, b.title, b.description, b.header_image,
+               b.developer, b.publisher, b.release_date, b.release_date_original,
+               r.total_review_count, r.all_reviews, r.total_review_positive_percent,
+               r.recent_review_count, r.recent_reviews, r.recent_review_positive_percent
+        FROM basic_info b
+        LEFT JOIN reviews r ON b.game_id = r.game_id
+        WHERE b.game_id IN :game_ids
+    """)
+    info_rows = db.execute(info_query, {"game_ids": ids_tuple}).fetchall()
+
+    genres_query = text("SELECT game_id, genre_name FROM genres WHERE game_id IN :game_ids")
+    genres_rows = db.execute(genres_query, {"game_ids": ids_tuple}).fetchall()
+    genres_map = defaultdict(list)
+    for row in genres_rows:
+        genres_map[row.game_id].append(row.genre_name)
+
+    tags_query = text("SELECT game_id, tag_name FROM tags WHERE game_id IN :game_ids")
+    tags_rows = db.execute(tags_query, {"game_ids": ids_tuple}).fetchall()
+    tags_map = defaultdict(list)
+    for row in tags_rows:
+        tags_map[row.game_id].append(row.tag_name)
+
+    found_ids = set()
+    results = []
+    for row in info_rows:
+        found_ids.add(row.game_id)
+        results.append({
+            "game_id": row.game_id,
+            "url": row.url,
+            "title": row.title,
+            "description": row.description,
+            "header_image": row.header_image,
+            "developer": row.developer,
+            "publisher": row.publisher,
+            "release_date": row.release_date,
+            "release_date_original": row.release_date_original,
+            "total_review_count": row.total_review_count,
+            "all_reviews": row.all_reviews,
+            "total_review_positive_percent": row.total_review_positive_percent,
+            "recent_review_count": row.recent_review_count,
+            "recent_reviews": row.recent_reviews,
+            "recent_review_positive_percent": row.recent_review_positive_percent,
+            "genres": genres_map[row.game_id],
+            "tags": tags_map[row.game_id],
+        })
+
+    not_found_ids = [gid for gid in game_ids if gid not in found_ids]
+    return {"games": results, "not_found_game_ids": not_found_ids}
 
 
 def get_item_recommendations(db: Session, request: GameRecommendRequest, limit: int = 20):

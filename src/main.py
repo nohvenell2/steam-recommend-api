@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from src.database import get_db, init_db, close_db
-from src.models import GameRecommendRequest, UserRecommendRequest
-from src.services import get_item_recommendations, get_user_recommendations
+from src.models import GameRecommendRequest, UserRecommendRequest, GameInfoRequest
+from src.services import get_item_recommendations, get_user_recommendations, get_game_details_by_ids
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -56,4 +56,18 @@ def recommend_by_user(request: UserRecommendRequest, db: Session = Depends(get_d
         }
     except Exception as e:
         print(f"Error fetching user recommendations: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/games/info")
+def get_games_info(request: GameInfoRequest, db: Session = Depends(get_db)):
+    try:
+        result = get_game_details_by_ids(db=db, game_ids=request.game_ids)
+        return {
+            "status": "success",
+            "data": result["games"],
+            "not_found_game_ids": result["not_found_game_ids"]
+        }
+    except Exception as e:
+        print(f"Error fetching game details: {e}")
         raise HTTPException(status_code=500, detail=str(e))

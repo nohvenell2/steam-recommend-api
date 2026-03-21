@@ -2,6 +2,29 @@ from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
 
+
+class GameDetail(BaseModel):
+    """추천 결과 게임 상세 정보"""
+    sim_score: float
+    game_id: int
+    url: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    header_image: Optional[str] = None
+    developer: Optional[str] = None
+    publisher: Optional[str] = None
+    release_date: Optional[datetime] = None
+    release_date_original: Optional[str] = None
+    total_review_count: Optional[int] = None
+    all_reviews: Optional[str] = None
+    total_review_positive_percent: Optional[int] = None
+    recent_review_count: Optional[int] = None
+    recent_reviews: Optional[str] = None
+    recent_review_positive_percent: Optional[int] = None
+    genres: List[str] = []
+    tags: List[str] = []
+
+
 class BaseFilterParams(BaseModel):
     """공통 필터 파라미터"""
     limit: int = Field(

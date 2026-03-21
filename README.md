@@ -107,19 +107,52 @@ uvicorn src.main:app --reload --port 8000
     "status": "success",
     "data": [
         {
-            "game_id": 1404210,
-            "title": "Red Dead Online",
             "sim_score": 0.6711,
+            "game_id": 1404210,
+            "url": "https://store.steampowered.com/app/1404210",
+            "title": "Red Dead Online",
+            "description": "Red Dead Online is now a standalone...",
+            "header_image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1404210/header.jpg",
+            "developer": "Rockstar Games",
+            "publisher": "Rockstar Games",
+            "release_date": "2020-12-01T00:00:00",
+            "release_date_original": "Dec 1, 2020",
             "total_review_count": 30131,
+            "all_reviews": "Mostly Positive",
             "total_review_positive_percent": 81,
-            "recent_review_count": null,
-            "recent_review_positive_percent": null,
-            "release_date": "2020-12-01T00:00:00"
+            "recent_review_count": 412,
+            "recent_reviews": "Mixed",
+            "recent_review_positive_percent": 55,
+            "genres": ["Action", "Adventure"],
+            "tags": ["Open World", "Multiplayer", "Western"]
         }
     ],
     "skipped_game_ids": [ 245 ]
 }
 ```
+
+### 응답 필드 설명
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `sim_score` | float | 코사인 유사도 점수 (1에 가까울수록 유사) |
+| `game_id` | int | 스팀 게임 ID |
+| `url` | string | 스팀 스토어 페이지 URL |
+| `title` | string | 게임 제목 |
+| `description` | string | 게임 설명 |
+| `header_image` | string | 헤더 이미지 URL |
+| `developer` | string | 개발사 |
+| `publisher` | string | 퍼블리셔 |
+| `release_date` | datetime | 출시일 (ISO-8601) |
+| `release_date_original` | string | 출시일 원본 텍스트 |
+| `total_review_count` | int | 전체 리뷰 수 |
+| `all_reviews` | string | 전체 리뷰 요약 텍스트 |
+| `total_review_positive_percent` | int | 전체 긍정 리뷰 비율 |
+| `recent_review_count` | int | 최근 리뷰 수 |
+| `recent_reviews` | string | 최근 리뷰 요약 텍스트 |
+| `recent_review_positive_percent` | int | 최근 긍정 리뷰 비율 |
+| `genres` | string[] | 장르 목록 |
+| `tags` | string[] | 태그 목록 |
+
 ### 임베딩 데이터가 없는 경우
-1. Item-to-Item : 404 reponse error
+1. Item-to-Item : 404 response error
 2. User-to-Item : `skipped_game_ids` 항목에 임베딩 데이터가 없는 게임 id 가 추가되어 응답됨

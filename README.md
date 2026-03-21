@@ -96,25 +96,13 @@ uvicorn src.main:app --reload --port 8000
         {
             "game_id": 1404210,
             "title": "Red Dead Online",
-            "url": "https://store.steampowered.com/app/1404210",
-            "description": "게임 설명 텍스트...",
-            "header_image": "https://cdn.akamai.steamstatic.com/...",
-            "developer": "Rockstar Games",
-            "publisher": "Rockstar Games",
-            "release_date": "2020-12-01T00:00:00",
-            "release_date_original": "Dec 1, 2020",
             "sim_score": 0.6711,
             "total_review_count": 30131,
-            "all_reviews": "Mostly Positive",
             "total_review_positive_percent": 81,
             "recent_review_count": null,
-            "recent_reviews": null,
             "recent_review_positive_percent": null,
-            "genres": ["Action", "Adventure"],
-            "tags": ["Open World", "Multiplayer", "Western"]
+            "release_date": "2020-12-01T00:00:00"
         }
     ]
 }
 ```
-
-`/recommend/user` 엔드포인트는 추가로 `skipped_game_ids` 필드를 반환합니다. 이 필드에는 임베딩이 존재하지 않아 유저 프로필 벡터 계산에서 제외된 게임 ID 목록이 포함됩니다.

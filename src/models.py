@@ -46,38 +46,3 @@ class UserGameInfo(BaseModel):
 class UserRecommendRequest(BaseFilterParams):
     """유저 정보 기반 유사도 검색 요청 (User-to-Item)"""
     games: List[UserGameInfo] = Field(..., description="유저가 플레이한 게임 목록")
-
-
-class GameRecommendation(BaseModel):
-    """추천 결과 단일 게임 정보"""
-    game_id: int
-    title: Optional[str] = None
-    url: Optional[str] = None
-    description: Optional[str] = None
-    header_image: Optional[str] = None
-    developer: Optional[str] = None
-    publisher: Optional[str] = None
-    release_date: Optional[datetime] = None
-    release_date_original: Optional[str] = None
-    sim_score: float
-    total_review_count: Optional[int] = None
-    all_reviews: Optional[str] = None
-    total_review_positive_percent: Optional[int] = None
-    recent_review_count: Optional[int] = None
-    recent_reviews: Optional[str] = None
-    recent_review_positive_percent: Optional[int] = None
-    genres: List[str] = []
-    tags: List[str] = []
-
-
-class GameRecommendResponse(BaseModel):
-    """게임 추천 응답"""
-    status: str = "success"
-    data: List[GameRecommendation]
-
-
-class UserRecommendResponse(BaseModel):
-    """유저 추천 응답"""
-    status: str = "success"
-    data: List[GameRecommendation]
-    skipped_game_ids: List[int] = []

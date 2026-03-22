@@ -66,10 +66,38 @@ uvicorn src.main:app --reload --port 8000
         "game_id": 1091500
     }
   ```
+- **Response 예시**:
+  ```json
+    {
+        "status": "success",
+        "data": [
+            {
+                "sim_score": 0.6711,
+                "game_id": 1404210,
+                "url": "https://store.steampowered.com/app/1404210",
+                "title": "Red Dead Online",
+                "description": "Red Dead Online is now a standalone...",
+                "header_image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1404210/header.jpg",
+                "developer": "Rockstar Games",
+                "publisher": "Rockstar Games",
+                "release_date": "2020-12-01T00:00:00",
+                "release_date_original": "Dec 1, 2020",
+                "total_review_count": 30131,
+                "all_reviews": "Mostly Positive",
+                "total_review_positive_percent": 81,
+                "recent_review_count": 412,
+                "recent_reviews": "Mixed",
+                "recent_review_positive_percent": 55,
+                "genres": ["Action", "Adventure"],
+                "tags": ["Open World", "Multiplayer", "Western"]
+            }
+        ]
+    }
+  ```
 
 ### 2. User-to-Item 유저 기반 추천 검색
 - **경로**: `POST /recommend/user`
-- **설명**: 한 유저가 플레이한 게임 리스트와それぞれの `playtime_forever` (플레이 타임)을 기준으로 **유저 취향 벡터**를 계산한 뒤, 이 벡터와 유사한 게임을 스팀 전체 목록에서 검색하여 반환합니다. (유저가 현재 보유해 보낸 배열에 있는 게임들은 모두 결과에서 자동 제외됩니다.)
+- **설명**: 한 유저가 플레이한 게임 리스트와 `playtime_forever` (플레이 타임)을 기준으로 **유저 취향 벡터**를 계산한 뒤, 이 벡터와 유사한 게임을 스팀 전체 목록에서 검색하여 반환합니다. (유저가 현재 보유해 보낸 배열에 있는 게임들은 모두 결과에서 자동 제외됩니다.)
 - **Request Body 예시**:
   ```json
     {
@@ -95,6 +123,35 @@ uvicorn src.main:app --reload --port 8000
             "has_community_visible_stats": false
             }
         ]
+    }
+  ```
+- **Response 예시**:
+  ```json
+    {
+        "status": "success",
+        "data": [
+            {
+                "sim_score": 0.5432,
+                "game_id": 1091500,
+                "url": "https://store.steampowered.com/app/1091500",
+                "title": "Cyberpunk 2077",
+                "description": "Cyberpunk 2077 is an open-world...",
+                "header_image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg",
+                "developer": "CD PROJEKT RED",
+                "publisher": "CD PROJEKT RED",
+                "release_date": "2020-12-10T00:00:00",
+                "release_date_original": "Dec 10, 2020",
+                "total_review_count": 500000,
+                "all_reviews": "Very Positive",
+                "total_review_positive_percent": 85,
+                "recent_review_count": 3000,
+                "recent_reviews": "Very Positive",
+                "recent_review_positive_percent": 93,
+                "genres": ["RPG"],
+                "tags": ["Open World", "RPG", "Cyberpunk"]
+            }
+        ],
+        "skipped_game_ids": [245]
     }
   ```
 
@@ -136,40 +193,8 @@ uvicorn src.main:app --reload --port 8000
     }
   ```
 
----
-
-## 응답 (Response) 형식
-성공적인 호출(HTTP 200)에 대해 아래와 같이 응답합니다. `sim_score`가 1에 가까울수록 가장 연관성이 짙은 추천 게임입니다.
-```json
-{
-    "status": "success",
-    "data": [
-        {
-            "sim_score": 0.6711,
-            "game_id": 1404210,
-            "url": "https://store.steampowered.com/app/1404210",
-            "title": "Red Dead Online",
-            "description": "Red Dead Online is now a standalone...",
-            "header_image": "https://cdn.cloudflare.steamstatic.com/steam/apps/1404210/header.jpg",
-            "developer": "Rockstar Games",
-            "publisher": "Rockstar Games",
-            "release_date": "2020-12-01T00:00:00",
-            "release_date_original": "Dec 1, 2020",
-            "total_review_count": 30131,
-            "all_reviews": "Mostly Positive",
-            "total_review_positive_percent": 81,
-            "recent_review_count": 412,
-            "recent_reviews": "Mixed",
-            "recent_review_positive_percent": 55,
-            "genres": ["Action", "Adventure"],
-            "tags": ["Open World", "Multiplayer", "Western"]
-        }
-    ],
-    "skipped_game_ids": [ 245 ]
-}
-```
-
 ### 응답 필드 설명
+
 | 필드 | 타입 | 설명 |
 |------|------|------|
 | `sim_score` | float | 코사인 유사도 점수 (1에 가까울수록 유사) |
@@ -190,7 +215,3 @@ uvicorn src.main:app --reload --port 8000
 | `recent_review_positive_percent` | int | 최근 긍정 리뷰 비율 |
 | `genres` | string[] | 장르 목록 |
 | `tags` | string[] | 태그 목록 |
-
-### 임베딩 데이터가 없는 경우
-1. Item-to-Item : 404 response error
-2. User-to-Item : `skipped_game_ids` 항목에 임베딩 데이터가 없는 게임 id 가 추가되어 응답됨

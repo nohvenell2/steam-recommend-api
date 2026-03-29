@@ -31,7 +31,13 @@ DB_PORT=5432
 DB_NAME=steam_games_clone
 DB_USER=postgres
 DB_PASSWORD=your_password
+
+# API 인증 키 (미설정 시 인증 비활성화)
+API_KEY=your_secret_api_key
 ```
+
+> `API_KEY`를 설정하면 모든 엔드포인트에 `X-API-Key` 헤더 인증이 활성화됩니다. 미설정 시 인증 없이 접근 가능합니다 (개발 환경용).
+> 키 생성 예시: `openssl rand -hex 32`
 
 ### 3. 서버 구동
 ```bash
@@ -42,6 +48,18 @@ uvicorn src.main:app --reload --port 8000
 ---
 
 ## API 엔드포인트 명세서
+
+### 인증
+
+`API_KEY` 환경변수가 설정된 경우, 모든 요청에 아래 헤더를 포함해야 합니다.
+
+```
+X-API-Key: your_secret_api_key
+```
+
+인증 실패 시 `403 Forbidden`을 반환합니다.
+
+---
 
 공통적으로 POST Body에 아래의 **Soft Filter 변수**를 포함시킬 수 있습니다.
 - `limit` (int): 반환할 추천 결과의 최대 개수 (기본값: 20)
